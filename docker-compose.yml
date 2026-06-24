@@ -1,18 +1,8 @@
 services:
-  api:
+  web:
     build: .
     command: >
       sh -c "make sample-data && make etl &&
-             uvicorn nyc_taxi_mobility_analytics.api:app --host 0.0.0.0 --port 8000"
+             npm run start -- --hostname 0.0.0.0 --port 3000"
     ports:
-      - "8000:8000"
-
-  app:
-    build: .
-    command: >
-      sh -c "make sample-data && make etl &&
-             streamlit run src/nyc_taxi_mobility_analytics/dashboard.py
-             --server.address 0.0.0.0 --server.port 8501 --server.headless true"
-    ports:
-      - "8501:8501"
-
+      - "3000:3000"

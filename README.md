@@ -1,4 +1,4 @@
-「NYC Taxi Mobility Analytics Platform 是一個城市交通資料工程與分析平台。它使用 NYC TLC Taxi Trip Records，展示 Parquet ingestion、partitioned analytical warehouse、time-series demand analysis、geospatial dashboard、fare / trip analytics、demand forecasting baseline 與 FastAPI 查詢服務。」
+「NYC Taxi Mobility Analytics Platform 是一個城市交通資料工程與分析平台。它使用 NYC TLC Taxi Trip Records，展示 Parquet ingestion、partitioned analytical warehouse、time-series demand analysis、geospatial dashboard、fare / trip analytics、demand forecasting baseline 與 Next.js 查詢服務。」
 
 # NYC Taxi Mobility Analytics Platform
 
@@ -22,12 +22,13 @@ This repository is a local-first analytics engineering project for NYC taxi mobi
 - DuckDB views and tables for fast local OLAP queries.
 - Data quality checks for row counts, required columns, timestamps, non-negative measures, and zone joins.
 - Time-series demand analysis, route analytics, fare analytics, and baseline forecasting.
-- FastAPI service and Streamlit dashboard on top of the same DuckDB warehouse.
+- Next.js App Router dashboard and Route Handlers on top of the same DuckDB warehouse.
 
 ## Quickstart
 
 ```bash
 python -m pip install -r requirements.txt
+npm install
 make sample-data
 make etl
 make dq
@@ -41,17 +42,13 @@ Generate portfolio demo images:
 make demo-assets
 ```
 
-Run the API:
-
-```bash
-make api
-```
-
-Run the dashboard:
+Run the Next.js app and API:
 
 ```bash
 make app
 ```
+
+Open `http://localhost:3000`.
 
 ## Partition Strategy
 
@@ -199,12 +196,11 @@ Generated images are stored in `docs/assets/`:
 docker compose up --build
 ```
 
-- API: `http://localhost:8000`
-- Streamlit: `http://localhost:8501`
+- Next.js app and API: `http://localhost:3000`
 
 ## Resume Bullets
 
-- Built a local analytics engineering platform for NYC TLC taxi trips using Parquet, DuckDB, partitioned storage, FastAPI, and Streamlit.
+- Built a local analytics engineering platform for NYC TLC taxi trips using Parquet, DuckDB, partitioned storage, and Next.js App Router.
 - Designed reproducible sample data generation and real Parquet ingestion adapter for public large-scale taxi trip records.
 - Implemented data quality checks, analytical marts, filterable KPI dashboards, zone/route OD analysis, demand heatmaps, trip explorer, and forecasting baselines with MAE/RMSE/MAPE evaluation.
 - Exposed analytics through API endpoints and an interactive dashboard for mobility, revenue, fare, and demand forecasting workflows.

@@ -2,6 +2,9 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .venv/
+node_modules/
+.next/
+tsconfig.tsbuildinfo
 *.log
 data/raw/
 data/sample/*.parquet

@@ -3,9 +3,10 @@
 __pycache__
 *.pyc
 .venv
+node_modules
+.next
 data/raw
 data/sample/*.parquet
 data/warehouse
 data/duckdb
 data/reports
-

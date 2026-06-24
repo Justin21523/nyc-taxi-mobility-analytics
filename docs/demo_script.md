@@ -4,6 +4,7 @@
 
    ```bash
    python -m pip install -r requirements.txt
+   npm install
    ```
 
 2. Generate sample Parquet:
@@ -37,17 +38,13 @@
    make real-smoke
    ```
 
-7. Start API:
-
-   ```bash
-   make api
-   ```
-
-8. Start dashboard:
+7. Start the Next.js app and API:
 
    ```bash
    make app
    ```
+
+8. Open `http://localhost:3000`.
 
 9. Walk through dashboard pages:
 
@@ -59,4 +56,4 @@
    - Forecast Lab: naive, moving average, seasonal naive comparison
    - Zone Map: NYC taxi zone GeoJSON choropleth
 
-10. Explain resume value: Parquet ingestion, partitioned storage, DuckDB OLAP, data quality, forecasting baseline, API, and dashboard.
+10. Explain resume value: Parquet ingestion, partitioned storage, DuckDB OLAP, data quality, forecasting baseline, Next.js Route Handlers, and dashboard.

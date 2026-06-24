@@ -1,0 +1,9 @@
+import { NextRequest } from "next/server";
+
+import { route } from "@/lib/server/http";
+import { filterOptions } from "@/lib/server/queries";
+
+export function GET(request: NextRequest) {
+  return route(async () => filterOptions(), request);
+}
+

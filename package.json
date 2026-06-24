@@ -1,0 +1,45 @@
+{
+  "name": "nyc-taxi-mobility-analytics",
+  "version": "1.0.0",
+  "description": "NYC Taxi Mobility Analytics Platform built with Next.js, DuckDB, Parquet, and NYC TLC trip records.",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "nextjs",
+    "duckdb",
+    "parquet",
+    "nyc-tlc",
+    "data-engineering",
+    "analytics-engineering"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@duckdb/node-api": "^1.5.4-r.1",
+    "date-fns": "^4.4.0",
+    "lucide-react": "^1.21.0",
+    "maplibre-gl": "^5.24.0",
+    "next": "^16.2.9",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-map-gl": "^8.1.0",
+    "recharts": "^3.9.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.1",
+    "@types/node": "^26.0.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.9",
+    "tailwindcss": "^4.3.1",
+    "typescript": "^6.0.3"
+  }
+}
