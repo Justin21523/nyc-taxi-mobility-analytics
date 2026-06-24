@@ -8,6 +8,7 @@ Demand forecasting baseline for hourly taxi trip counts.
 
 - Naive: next hour equals previous observed hour.
 - Moving average: next hour equals the recent hourly average.
+- Seasonal naive: next hour equals the same hour from the previous day.
 
 ## Intended Use
 
@@ -18,4 +19,3 @@ The baseline establishes a measurable reference for future forecasting work. It 
 - MAE
 - RMSE
 - MAPE
-

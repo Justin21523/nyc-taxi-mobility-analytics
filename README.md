@@ -148,17 +148,27 @@ Reports are written to `data/reports/evaluation_report.json`.
 - `GET /analytics/hourly-demand`
 - `GET /analytics/top-zones`
 - `GET /analytics/routes`
+- `GET /analytics/od-matrix`
+- `GET /analytics/airport-trips`
+- `GET /analytics/fare-summary`
+- `GET /analytics/tip-behavior`
+- `GET /analytics/seasonality`
+- `GET /analytics/peak-hours`
 - `GET /forecast/demand`
+- `GET /forecast/metrics`
+- `GET /zones`
 - `GET /trips/sample`
+- `GET /trips/search`
 
 ## Dashboard Pages
 
 - Overview
-- Demand by hour
-- Zone analysis
-- Route analysis
-- Fare analysis
-- Forecasting baseline
+- Demand: hourly trend, weekday/hour heatmap, peak/off-peak summary, anomaly baseline
+- Zones & routes: pickup/dropoff ranking, borough OD matrix, route matrix
+- Fares & tips: fare distribution, revenue by borough, tip behavior, route revenue
+- Trip Explorer: filterable and sortable trip-level table
+- Forecast Lab: naive, moving average, and seasonal naive model comparison
+- Zone Map: NYC taxi zone GeoJSON choropleth for pickup/dropoff demand or revenue
 
 ## Evaluation
 
@@ -196,5 +206,5 @@ docker compose up --build
 
 - Built a local analytics engineering platform for NYC TLC taxi trips using Parquet, DuckDB, partitioned storage, FastAPI, and Streamlit.
 - Designed reproducible sample data generation and real Parquet ingestion adapter for public large-scale taxi trip records.
-- Implemented data quality checks, analytical marts, route and zone analysis, time-series demand features, and forecasting baselines with MAE/RMSE/MAPE evaluation.
+- Implemented data quality checks, analytical marts, filterable KPI dashboards, zone/route OD analysis, demand heatmaps, trip explorer, and forecasting baselines with MAE/RMSE/MAPE evaluation.
 - Exposed analytics through API endpoints and an interactive dashboard for mobility, revenue, fare, and demand forecasting workflows.

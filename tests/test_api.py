@@ -29,7 +29,24 @@ def test_forecast_and_sample_endpoints():
     forecast = client.get("/forecast/demand?horizon=6")
     assert forecast.status_code == 200
     assert len(forecast.json()) == 6
+    metrics = client.get("/forecast/metrics")
+    assert metrics.status_code == 200
+    assert len(metrics.json()) == 3
     sample = client.get("/trips/sample?limit=4")
     assert sample.status_code == 200
     assert len(sample.json()) == 4
 
+
+def test_new_analytics_and_trip_search_endpoints():
+    for path in [
+        "/analytics/od-matrix",
+        "/analytics/airport-trips",
+        "/analytics/fare-summary",
+        "/analytics/tip-behavior",
+        "/analytics/seasonality",
+        "/analytics/peak-hours",
+        "/zones",
+        "/trips/search?limit=5&sort_by=total_amount&sort_dir=desc",
+    ]:
+        response = client.get(path)
+        assert response.status_code == 200

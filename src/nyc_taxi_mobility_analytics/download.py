@@ -2,9 +2,10 @@ import argparse
 from pathlib import Path
 from urllib.request import urlretrieve
 
-from .config import RAW_REFERENCE_DIR, RAW_TLC_DIR, RAW_ZONES_CSV_PATH, ensure_dirs
+from .config import RAW_REFERENCE_DIR, RAW_TLC_DIR, RAW_ZONES_CSV_PATH, RAW_ZONES_GEOJSON_PATH, ensure_dirs
 
 BASE_URL = "https://d37ci6vzurychx.cloudfront.net"
+NYC_OPEN_DATA_BASE_URL = "https://data.cityofnewyork.us/resource"
 SUPPORTED_TAXI_TYPES = {"yellow", "green", "fhvhv"}
 
 
@@ -24,6 +25,10 @@ def trip_data_path(output_dir: Path, taxi_type: str, year: int, month: int | str
 
 def zones_url() -> str:
     return f"{BASE_URL}/misc/taxi_zone_lookup.csv"
+
+
+def zones_geojson_url() -> str:
+    return f"{NYC_OPEN_DATA_BASE_URL}/8meu-9t5y.geojson?$limit=5000"
 
 
 def download_file(url: str, destination: Path, overwrite: bool = False) -> Path:
@@ -46,6 +51,11 @@ def download_zones(output_path: Path = RAW_ZONES_CSV_PATH, overwrite: bool = Fal
     return download_file(zones_url(), output_path, overwrite)
 
 
+def download_zones_geojson(output_path: Path = RAW_ZONES_GEOJSON_PATH, overwrite: bool = False) -> Path:
+    RAW_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
+    return download_file(zones_geojson_url(), output_path, overwrite)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Download official NYC TLC Parquet data.")
     parser.add_argument("--taxi-type", default="yellow", choices=sorted(SUPPORTED_TAXI_TYPES))
@@ -53,6 +63,7 @@ def main() -> None:
     parser.add_argument("--month", default="01")
     parser.add_argument("--output-dir", type=Path, default=RAW_TLC_DIR)
     parser.add_argument("--with-zones", action="store_true")
+    parser.add_argument("--with-zone-geojson", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
 
@@ -60,6 +71,8 @@ def main() -> None:
     download_trip_data(args.taxi_type, args.year, args.month, args.output_dir, args.overwrite)
     if args.with_zones:
         download_zones(overwrite=args.overwrite)
+    if args.with_zone_geojson:
+        download_zones_geojson(overwrite=args.overwrite)
 
 
 if __name__ == "__main__":

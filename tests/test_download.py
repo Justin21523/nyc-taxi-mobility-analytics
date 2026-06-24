@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from nyc_taxi_mobility_analytics.download import trip_data_path, trip_data_url, zones_url
+from nyc_taxi_mobility_analytics.download import trip_data_path, trip_data_url, zones_geojson_url, zones_url
 
 
 def test_trip_data_url_for_default_real_dataset():
@@ -15,3 +15,6 @@ def test_trip_data_path_layout():
 def test_zones_url():
     assert zones_url() == "https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv"
 
+
+def test_zones_geojson_url():
+    assert zones_geojson_url() == "https://data.cityofnewyork.us/resource/8meu-9t5y.geojson?$limit=5000"

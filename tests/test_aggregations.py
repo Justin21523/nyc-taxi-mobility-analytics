@@ -1,12 +1,19 @@
 from nyc_taxi_mobility_analytics.analytics import (
     borough_od_matrix,
     daily_revenue,
+    demand_anomalies,
+    fare_summary,
+    filter_options,
     hourly_demand,
+    peak_hour_summary,
     routes,
+    search_trips,
     tip_behavior,
+    tip_by_distance_bucket,
     top_routes_by_revenue,
     top_zones,
     weekday_hour_seasonality,
+    zone_map_metrics,
 )
 
 
@@ -38,3 +45,26 @@ def test_advanced_analytics_outputs():
     od = borough_od_matrix()
     assert not od.empty
     assert {"pickup_borough", "dropoff_borough", "trip_count", "total_revenue"}.issubset(od.columns)
+
+
+def test_filter_options_and_filtered_kpis():
+    options = filter_options()
+    assert options["min_date"] is not None
+    filtered = hourly_demand(filters={"pickup_borough": "Manhattan"})
+    assert not filtered.empty
+
+
+def test_demand_and_fare_feature_outputs():
+    peak = peak_hour_summary()
+    assert "busiest_hour" in peak
+    anomalies = demand_anomalies()
+    assert {"rolling_mean", "upper_band", "lower_band", "is_anomaly"}.issubset(anomalies.columns)
+    assert not fare_summary().empty
+    assert not tip_by_distance_bucket().empty
+
+
+def test_trip_explorer_and_zone_map_metrics():
+    trips = search_trips(limit=5, sort_by="total_amount", sort_dir="desc")
+    assert len(trips) == 5
+    assert {"pickup_zone", "dropoff_zone", "duration_min"}.issubset(trips.columns)
+    assert not zone_map_metrics("pickup").empty

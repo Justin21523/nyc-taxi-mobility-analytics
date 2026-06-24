@@ -15,6 +15,7 @@ DB_PATH = DUCKDB_DIR / "taxi_analytics.duckdb"
 TRIPS_SAMPLE_PATH = SAMPLE_DIR / "sample_trips.parquet"
 ZONES_SAMPLE_PATH = SAMPLE_DIR / "sample_zones.parquet"
 RAW_ZONES_CSV_PATH = RAW_REFERENCE_DIR / "taxi_zone_lookup.csv"
+RAW_ZONES_GEOJSON_PATH = RAW_REFERENCE_DIR / "nyc_taxi_zones.geojson"
 TRIPS_WAREHOUSE_DIR = WAREHOUSE_DIR / "trips"
 
 

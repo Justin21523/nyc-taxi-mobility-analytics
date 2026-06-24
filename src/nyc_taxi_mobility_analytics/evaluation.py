@@ -28,6 +28,7 @@ def run_evaluation() -> dict:
     report = {
         "naive": regression_metrics(forecast["actual"], forecast["naive_forecast"]),
         "moving_average": regression_metrics(forecast["actual"], forecast["moving_average_forecast"]),
+        "seasonal_naive": regression_metrics(forecast["actual"], forecast["seasonal_naive_forecast"]),
         "rows_evaluated": int(forecast["actual"].notna().sum()),
     }
     (REPORTS_DIR / "evaluation_report.json").write_text(json.dumps(report, indent=2))
@@ -40,4 +41,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
