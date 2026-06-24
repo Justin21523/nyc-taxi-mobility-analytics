@@ -1,0 +1,11 @@
+.git
+.pytest_cache
+__pycache__
+*.pyc
+.venv
+data/raw
+data/sample/*.parquet
+data/warehouse
+data/duckdb
+data/reports
+
