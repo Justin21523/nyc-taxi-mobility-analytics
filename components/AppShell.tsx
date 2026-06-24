@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { Activity, BarChart3, CarTaxiFront, Gauge, Map, Route, Search, WalletCards } from "lucide-react";
+import { Activity, BarChart3, CarTaxiFront, Gauge, Map, Plane, Route, Search, WalletCards } from "lucide-react";
 import type { ReactNode } from "react";
 
 const navItems = [
   { href: "/", label: "Overview", icon: Gauge },
   { href: "/demand", label: "Demand", icon: Activity },
   { href: "/zones-routes", label: "Zones & Routes", icon: Route },
+  { href: "/airports", label: "Airports", icon: Plane },
   { href: "/fares-tips", label: "Fares & Tips", icon: WalletCards },
   { href: "/trips", label: "Trip Explorer", icon: Search },
   { href: "/forecast", label: "Forecast Lab", icon: BarChart3 },
@@ -38,4 +39,3 @@ export function AppShell({ children }: { children: ReactNode }) {
     </div>
   );
 }
-

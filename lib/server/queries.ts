@@ -325,6 +325,272 @@ export async function zoneNames() {
   return rows.map((row) => row.zone);
 }
 
+export async function zoneList() {
+  return queryRows<{ location_id: number; borough: string; zone: string; service_zone: string }>(`
+    SELECT location_id, borough, zone, service_zone
+    FROM zones
+    WHERE zone IS NOT NULL
+    ORDER BY borough, zone
+  `);
+}
+
+export async function zoneDetail(zoneId: number, filters: Filters) {
+  const { fromSql, params } = filteredFrom(filters);
+  const scopedFrom = `${fromSql} AND (t.pickup_location_id = $zoneId OR t.dropoff_location_id = $zoneId)`;
+  const detail = await queryOne(
+    `
+    SELECT z.location_id, z.borough, z.zone, z.service_zone
+    FROM zones z
+    WHERE z.location_id = $zoneId
+    `,
+    { zoneId },
+  );
+  const metrics = await queryOne(
+    `
+    SELECT count(*) AS trip_count,
+           round(sum(t.total_amount), 2) AS total_revenue,
+           round(avg(t.total_amount), 2) AS avg_total_amount,
+           round(avg(t.trip_distance), 2) AS avg_distance,
+           round(avg(date_diff('minute', t.pickup_datetime, t.dropoff_datetime)), 2) AS avg_duration_min,
+           round(avg(CASE WHEN t.total_amount > 0 THEN t.tip_amount / t.total_amount ELSE 0 END) * 100, 2) AS avg_tip_rate_pct,
+           round(avg(CASE WHEN p.service_zone = 'Airport' OR d.service_zone = 'Airport' THEN 1 ELSE 0 END) * 100, 2) AS airport_connection_share_pct
+    ${scopedFrom}
+    `,
+    { ...params, zoneId },
+  );
+  return { ...detail, ...metrics };
+}
+
+export async function zoneInboundOutbound(zoneId: number, filters: Filters) {
+  const { fromSql, params } = filteredFrom(filters);
+  return queryRows(
+    `
+    SELECT direction,
+           count(*) AS trip_count,
+           round(sum(total_amount), 2) AS total_revenue,
+           round(avg(total_amount), 2) AS avg_total_amount,
+           round(avg(trip_distance), 2) AS avg_distance
+    FROM (
+      SELECT CASE
+               WHEN t.pickup_location_id = $zoneId AND t.dropoff_location_id = $zoneId THEN 'internal'
+               WHEN t.pickup_location_id = $zoneId THEN 'outbound'
+               WHEN t.dropoff_location_id = $zoneId THEN 'inbound'
+             END AS direction,
+             t.total_amount,
+             t.trip_distance
+      ${fromSql} AND (t.pickup_location_id = $zoneId OR t.dropoff_location_id = $zoneId)
+    )
+    GROUP BY 1
+    ORDER BY trip_count DESC
+    `,
+    { ...params, zoneId },
+  );
+}
+
+export async function zoneTopOrigins(zoneId: number, filters: Filters, limit = 15) {
+  const { fromSql, params } = filteredFrom(filters);
+  return queryRows(
+    `
+    SELECT p.location_id, p.borough, p.zone,
+           count(*) AS trip_count,
+           round(sum(t.total_amount), 2) AS total_revenue,
+           round(avg(t.total_amount), 2) AS avg_total_amount
+    ${fromSql}
+    AND t.dropoff_location_id = $zoneId
+    GROUP BY 1, 2, 3
+    ORDER BY trip_count DESC
+    LIMIT $limit
+    `,
+    { ...params, zoneId, limit },
+  );
+}
+
+export async function zoneTopDestinations(zoneId: number, filters: Filters, limit = 15) {
+  const { fromSql, params } = filteredFrom(filters);
+  return queryRows(
+    `
+    SELECT d.location_id, d.borough, d.zone,
+           count(*) AS trip_count,
+           round(sum(t.total_amount), 2) AS total_revenue,
+           round(avg(t.total_amount), 2) AS avg_total_amount
+    ${fromSql}
+    AND t.pickup_location_id = $zoneId
+    GROUP BY 1, 2, 3
+    ORDER BY trip_count DESC
+    LIMIT $limit
+    `,
+    { ...params, zoneId, limit },
+  );
+}
+
+export async function zoneHourlyDemand(zoneId: number, filters: Filters) {
+  const { fromSql, params } = filteredFrom(filters);
+  return queryRows(
+    `
+    SELECT date_trunc('hour', t.pickup_datetime) AS pickup_hour,
+           count(*) AS trip_count
+    ${fromSql}
+    AND (t.pickup_location_id = $zoneId OR t.dropoff_location_id = $zoneId)
+    GROUP BY 1
+    ORDER BY 1
+    `,
+    { ...params, zoneId },
+  );
+}
+
+export async function routeDetail(pickupZone: string, dropoffZone: string, filters: Filters) {
+  const { fromSql, params } = filteredFrom(filters);
+  const route = await queryOne(
+    `
+    SELECT count(*) AS trip_count,
+           round(sum(t.total_amount), 2) AS total_revenue,
+           round(avg(t.total_amount), 2) AS avg_total_amount,
+           round(avg(t.trip_distance), 2) AS avg_distance,
+           round(avg(date_diff('minute', t.pickup_datetime, t.dropoff_datetime)), 2) AS avg_duration_min,
+           round(avg(CASE WHEN t.total_amount > 0 THEN t.tip_amount / t.total_amount ELSE 0 END) * 100, 2) AS avg_tip_rate_pct
+    ${fromSql}
+    AND p.zone = $pickupZone
+    AND d.zone = $dropoffZone
+    `,
+    { ...params, pickupZone, dropoffZone },
+  );
+  const system = await overview(filters);
+  return { pickup_zone: pickupZone, dropoff_zone: dropoffZone, route, system };
+}
+
+export async function routeHourlyDemand(pickupZone: string, dropoffZone: string, filters: Filters) {
+  const { fromSql, params } = filteredFrom(filters);
+  return queryRows(
+    `
+    SELECT date_trunc('hour', t.pickup_datetime) AS pickup_hour,
+           count(*) AS trip_count
+    ${fromSql}
+    AND p.zone = $pickupZone
+    AND d.zone = $dropoffZone
+    GROUP BY 1
+    ORDER BY 1
+    `,
+    { ...params, pickupZone, dropoffZone },
+  );
+}
+
+export async function routeFareDistribution(pickupZone: string, dropoffZone: string, filters: Filters, limit = 1000) {
+  const { fromSql, params } = filteredFrom(filters);
+  return queryRows(
+    `
+    SELECT t.fare_amount, t.tip_amount, t.total_amount, t.trip_distance,
+           CASE WHEN t.total_amount > 0 THEN t.tip_amount / t.total_amount ELSE 0 END AS tip_rate,
+           date_diff('minute', t.pickup_datetime, t.dropoff_datetime) AS duration_min
+    ${fromSql}
+    AND p.zone = $pickupZone
+    AND d.zone = $dropoffZone
+    ORDER BY t.total_amount DESC
+    LIMIT $limit
+    `,
+    { ...params, pickupZone, dropoffZone, limit },
+  );
+}
+
+export async function airportAnalytics(filters: Filters) {
+  const { fromSql, params } = filteredFrom(filters);
+  return queryRows(
+    `
+    SELECT airport_zone,
+           count(*) AS trip_count,
+           round(sum(total_amount), 2) AS total_revenue,
+           round(avg(total_amount), 2) AS avg_total_amount,
+           round(avg(trip_distance), 2) AS avg_distance,
+           round(avg(duration_min), 2) AS avg_duration_min,
+           round(avg(CASE WHEN direction = 'outbound' THEN 1 ELSE 0 END) * 100, 2) AS outbound_share_pct,
+           round(avg(CASE WHEN direction = 'inbound' THEN 1 ELSE 0 END) * 100, 2) AS inbound_share_pct
+    FROM (
+      SELECT CASE
+               WHEN p.service_zone = 'Airport' THEN p.zone
+               WHEN d.service_zone = 'Airport' THEN d.zone
+             END AS airport_zone,
+             CASE
+               WHEN p.service_zone = 'Airport' AND d.service_zone = 'Airport' THEN 'airport-to-airport'
+               WHEN p.service_zone = 'Airport' THEN 'outbound'
+               WHEN d.service_zone = 'Airport' THEN 'inbound'
+             END AS direction,
+             t.total_amount,
+             t.trip_distance,
+             date_diff('minute', t.pickup_datetime, t.dropoff_datetime) AS duration_min
+      ${fromSql}
+      AND (p.service_zone = 'Airport' OR d.service_zone = 'Airport')
+    )
+    GROUP BY 1
+    ORDER BY trip_count DESC
+    `,
+    params,
+  );
+}
+
+export async function airportRoutes(filters: Filters, limit = 25) {
+  const { fromSql, params } = filteredFrom(filters);
+  return queryRows(
+    `
+    SELECT p.zone AS pickup_zone,
+           d.zone AS dropoff_zone,
+           CASE
+             WHEN p.service_zone = 'Airport' THEN p.zone
+             WHEN d.service_zone = 'Airport' THEN d.zone
+           END AS airport_zone,
+           CASE
+             WHEN p.service_zone = 'Airport' AND d.service_zone = 'Airport' THEN 'airport-to-airport'
+             WHEN p.service_zone = 'Airport' THEN 'outbound'
+             WHEN d.service_zone = 'Airport' THEN 'inbound'
+           END AS direction,
+           count(*) AS trip_count,
+           round(sum(t.total_amount), 2) AS total_revenue,
+           round(avg(t.total_amount), 2) AS avg_total_amount,
+           round(avg(t.trip_distance), 2) AS avg_distance
+    ${fromSql}
+    AND (p.service_zone = 'Airport' OR d.service_zone = 'Airport')
+    GROUP BY 1, 2, 3, 4
+    ORDER BY trip_count DESC
+    LIMIT $limit
+    `,
+    { ...params, limit },
+  );
+}
+
+export async function airportHourlyDemand(filters: Filters) {
+  const { fromSql, params } = filteredFrom(filters);
+  return queryRows(
+    `
+    SELECT date_trunc('hour', t.pickup_datetime) AS pickup_hour,
+           CASE
+             WHEN p.service_zone = 'Airport' THEN p.zone
+             WHEN d.service_zone = 'Airport' THEN d.zone
+           END AS airport_zone,
+           count(*) AS trip_count
+    ${fromSql}
+    AND (p.service_zone = 'Airport' OR d.service_zone = 'Airport')
+    GROUP BY 1, 2
+    ORDER BY 1, 2
+    `,
+    params,
+  );
+}
+
+export async function airportFareComparison(filters: Filters) {
+  const { fromSql, params } = filteredFrom(filters);
+  return queryRows(
+    `
+    SELECT CASE WHEN p.service_zone = 'Airport' OR d.service_zone = 'Airport' THEN 'airport' ELSE 'non-airport' END AS segment,
+           count(*) AS trip_count,
+           round(avg(t.total_amount), 2) AS avg_total_amount,
+           round(avg(t.trip_distance), 2) AS avg_distance,
+           round(avg(date_diff('minute', t.pickup_datetime, t.dropoff_datetime)), 2) AS avg_duration_min
+    ${fromSql}
+    GROUP BY 1
+    ORDER BY segment
+    `,
+    params,
+  );
+}
+
 export async function tripSearch(
   filters: Filters,
   options: {
@@ -335,6 +601,7 @@ export async function tripSearch(
     maxFare?: number | null;
     sortBy?: string;
     sortDir?: string;
+    relatedZoneId?: number | null;
   } = {},
 ) {
   let { fromSql, params } = filteredFrom(filters);
@@ -354,6 +621,10 @@ export async function tripSearch(
   if (options.maxFare !== null && options.maxFare !== undefined) {
     extra.push("t.total_amount <= $maxFare");
     params = { ...params, maxFare: options.maxFare };
+  }
+  if (options.relatedZoneId !== null && options.relatedZoneId !== undefined) {
+    extra.push("(t.pickup_location_id = $relatedZoneId OR t.dropoff_location_id = $relatedZoneId)");
+    params = { ...params, relatedZoneId: options.relatedZoneId };
   }
   if (extra.length) {
     fromSql += `${fromSql.includes("WHERE") ? " AND " : " WHERE "}${extra.join(" AND ")}`;
@@ -406,4 +677,3 @@ export async function zoneGeojson(filters: Filters, kind = "pickup", valueColumn
   });
   return geojson;
 }
-

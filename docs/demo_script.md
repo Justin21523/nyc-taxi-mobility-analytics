@@ -51,6 +51,9 @@
    - Overview: filterable KPI cards and daily trend
    - Demand: weekday/hour heatmap, peak/off-peak analysis, anomaly baseline
    - Zones & routes: pickup/dropoff rankings, borough OD matrix, route matrix
+   - Zone Drilldown: inbound/outbound trips, connected zones, hourly demand
+   - Route Drilldown: route KPI, route-vs-system comparison, route samples
+   - Airport Analytics: JFK/LGA/EWR demand, airport fare premium, top airport routes
    - Fares & tips: fare distribution, tip behavior, revenue by route
    - Trip Explorer: sortable trip-level query interface
    - Forecast Lab: naive, moving average, seasonal naive comparison

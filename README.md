@@ -147,6 +147,10 @@ Reports are written to `data/reports/evaluation_report.json`.
 - `GET /analytics/routes`
 - `GET /analytics/od-matrix`
 - `GET /analytics/airport-trips`
+- `GET /analytics/airports`
+- `GET /analytics/zones/{zoneId}`
+- `GET /analytics/zones/{zoneId}/flows`
+- `GET /analytics/routes/drilldown`
 - `GET /analytics/fare-summary`
 - `GET /analytics/tip-behavior`
 - `GET /analytics/seasonality`
@@ -162,6 +166,9 @@ Reports are written to `data/reports/evaluation_report.json`.
 - Overview
 - Demand: hourly trend, weekday/hour heatmap, peak/off-peak summary, anomaly baseline
 - Zones & routes: pickup/dropoff ranking, borough OD matrix, route matrix
+- Zone Drilldown: inbound/outbound trips, connected zones, hourly demand, and sample trips
+- Route Drilldown: route KPIs, route-vs-system comparison, fare distribution, and route samples
+- Airport Analytics: JFK/LGA/EWR demand, inbound/outbound split, airport fare premium, and top airport routes
 - Fares & tips: fare distribution, revenue by borough, tip behavior, route revenue
 - Trip Explorer: filterable and sortable trip-level table
 - Forecast Lab: naive, moving average, and seasonal naive model comparison

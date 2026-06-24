@@ -49,6 +49,11 @@ smoke-web:
 	curl -fsS http://127.0.0.1:3100/health >/dev/null
 	curl -fsS http://127.0.0.1:3100/analytics/overview >/dev/null
 	curl -fsS http://127.0.0.1:3100/forecast/metrics >/dev/null
+	curl -fsS http://127.0.0.1:3100/airports >/dev/null
+	curl -fsS http://127.0.0.1:3100/zones/4 >/dev/null
+	curl -fsS http://127.0.0.1:3100/routes/drilldown >/dev/null
+	curl -fsS http://127.0.0.1:3100/analytics/airports >/dev/null
+	curl -fsS http://127.0.0.1:3100/analytics/routes/drilldown >/dev/null
 	kill $$(cat data/reports/next.pid)
 
 test:

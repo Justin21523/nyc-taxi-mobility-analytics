@@ -1,4 +1,4 @@
-import { BarList, HeatmapTable, SimpleTable } from "@/components/Charts";
+import { BarList, HeatmapTable, LinkedTable } from "@/components/Charts";
 import { PageHeader } from "@/components/PageHeader";
 import { Section } from "@/components/Section";
 import { filtersFromSearchParams, type SearchParams } from "@/lib/server/pageFilters";
@@ -19,9 +19,11 @@ export default async function ZonesRoutesPage({ searchParams }: { searchParams: 
       <div className="grid gap-5 xl:grid-cols-2">
         <Section title="Pickup zones">
           <BarList data={pickupZones} nameKey="zone" valueKey="trip_count" />
+          <LinkedTable rows={pickupZones.slice(0, 10)} columns={["location_id", "borough", "zone", "trip_count", "total_revenue"]} hrefForRow={(row) => `/zones/${row.location_id}`} />
         </Section>
         <Section title="Dropoff zones">
           <BarList data={dropoffZones} nameKey="zone" valueKey="trip_count" />
+          <LinkedTable rows={dropoffZones.slice(0, 10)} columns={["location_id", "borough", "zone", "trip_count", "total_revenue"]} hrefForRow={(row) => `/zones/${row.location_id}`} />
         </Section>
         <Section title="Borough-to-borough OD matrix">
           <HeatmapTable rows={od} xKey="dropoff_borough" yKey="pickup_borough" valueKey="trip_count" />
@@ -31,11 +33,13 @@ export default async function ZonesRoutesPage({ searchParams }: { searchParams: 
         </Section>
         <section className="xl:col-span-2">
           <Section title="Top routes by revenue">
-            <SimpleTable rows={revenueRoutes} />
+            <LinkedTable
+              rows={revenueRoutes}
+              hrefForRow={(row) => `/routes/drilldown?pickupZone=${encodeURIComponent(String(row.pickup_zone))}&dropoffZone=${encodeURIComponent(String(row.dropoff_zone))}`}
+            />
           </Section>
         </section>
       </div>
     </>
   );
 }
-
