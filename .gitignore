@@ -6,6 +6,8 @@ node_modules/
 .next/
 tsconfig.tsbuildinfo
 *.log
+test-results/
+playwright-report/
 data/raw/
 data/sample/*.parquet
 data/warehouse/*
@@ -14,3 +16,5 @@ data/duckdb/*
 !data/duckdb/.gitkeep
 data/reports/*
 !data/reports/.gitkeep
+data/uploads/*
+!data/uploads/.gitkeep

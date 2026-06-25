@@ -36,8 +36,8 @@ export async function warehousePartitions() {
   const rowLookup = new Map(rows.map((row) => [`${row.year}-${String(row.month).padStart(2, "0")}`, row.row_count]));
   return Promise.all(files.map(async (filePath) => {
     const info = await stat(filePath);
-    const year = Number(filePath.match(/year=(\\d+)/)?.[1] ?? 0);
-    const month = Number(filePath.match(/month=(\\d+)/)?.[1] ?? 0);
+    const year = Number(filePath.match(/year=(\d+)/)?.[1] ?? 0);
+    const month = Number(filePath.match(/month=(\d+)/)?.[1] ?? 0);
     return {
       year,
       month,
@@ -67,14 +67,22 @@ export async function warehouseCatalog() {
     WHERE table_name = 'trips'
     ORDER BY ordinal_position
   `);
+  const partitions = await warehousePartitions();
+  const benchmark = await readJsonReport("query_latency_benchmark.json", null);
+  const evaluation = await readJsonReport("evaluation_report.json", null);
   return {
     tables,
     schema,
     freshness: freshness[0] ?? {},
-    partitions: await warehousePartitions(),
+    partitions,
+    summary: {
+      table_count: tables.length,
+      schema_column_count: schema.length,
+      partition_count: partitions.length,
+      parquet_size_mb: Number(partitions.reduce((sum, row) => sum + Number(row.file_size_mb ?? 0), 0).toFixed(2)),
+    },
     dataQuality: await readJsonReport("data_quality_report.json", null),
-    benchmark: await readJsonReport("query_latency_benchmark.json", null),
-    evaluation: await readJsonReport("evaluation_report.json", null),
+    benchmark,
+    evaluation,
   };
 }
-

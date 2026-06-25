@@ -203,6 +203,29 @@ Generated images are stored in `docs/assets/`:
 ![Routes](docs/assets/routes.png)
 ![Fare distribution](docs/assets/fare_distribution.png)
 
+### Interactive Guided Demo
+
+The app defaults to Chinese and automatically opens a floating guided assistant. The Playwright demo walks through KPI cards, Pipeline Journey, upload processing, Data Quality, Warehouse, geospatial analysis, airport/segment analytics, anomaly investigation, trip explorer, and forecast evaluation.
+
+- Full guided tour recording: [demo-tour.webm](docs/assets/playwright/demo-tour.webm)
+- Guide step screenshots: `docs/assets/playwright/guide-step-01-overview-kpis.png` through `guide-step-32-zone-drilldown.png`
+- Long pages are captured as viewport-sized scroll slices, for example `overview-01.png`, `overview-02.png`, and `overview-03.png`.
+
+Representative Playwright screenshots:
+
+![Overview dashboard](docs/assets/playwright/overview-01.png)
+![Pipeline journey upload](docs/assets/playwright/journey-upload-report.png)
+![Demand analysis](docs/assets/playwright/demand-01.png)
+![Zone map](docs/assets/playwright/zone-map-01.png)
+![Forecast lab](docs/assets/playwright/forecast-01.png)
+![Data quality explorer](docs/assets/playwright/data-quality-01.png)
+
+Regenerate screenshots and video:
+
+```bash
+npm run demo:capture
+```
+
 ## Docker
 
 ```bash

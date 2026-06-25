@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "demo:capture": "playwright test tests/e2e/demo-capture.spec.ts --reporter=line"
   },
   "keywords": [
     "nextjs",
@@ -23,6 +24,7 @@
   "dependencies": {
     "@duckdb/node-api": "^1.5.4-r.1",
     "date-fns": "^4.4.0",
+    "echarts": "^6.1.0",
     "lucide-react": "^1.21.0",
     "maplibre-gl": "^5.24.0",
     "next": "^16.2.9",
@@ -33,6 +35,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4.3.1",
     "@types/node": "^26.0.1",
     "@types/react": "^19.2.17",

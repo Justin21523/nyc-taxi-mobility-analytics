@@ -7,13 +7,13 @@ import { airportAnalytics, airportFareComparison, airportHourlyDemand, airportRo
 export function GET(request: NextRequest) {
   return route(async () => {
     const filters = parseFilters(request.nextUrl.searchParams);
+    const airportZone = request.nextUrl.searchParams.get("airportZone");
     const [summary, routes, hourlyDemand, fareComparison] = await Promise.all([
-      airportAnalytics(filters),
-      airportRoutes(filters),
-      airportHourlyDemand(filters),
+      airportAnalytics(filters, airportZone),
+      airportRoutes(filters, Number(request.nextUrl.searchParams.get("limit") ?? 25), airportZone),
+      airportHourlyDemand(filters, airportZone),
       airportFareComparison(filters),
     ]);
     return { summary, routes, hourlyDemand, fareComparison };
   }, request);
 }
-

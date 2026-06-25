@@ -23,11 +23,62 @@ export async function filterOptions() {
   const dates = await queryOne<{ min_date: string; max_date: string }>(
     "SELECT min(CAST(pickup_datetime AS DATE)) AS min_date, max(CAST(pickup_datetime AS DATE)) AS max_date FROM trips",
   );
+  const zones = await zoneList();
   return {
     boroughs: boroughs.map((row) => row.borough),
     paymentTypes: paymentTypes.map((row) => row.payment_type),
     minDate: dates.min_date,
     maxDate: dates.max_date,
+    zones,
+    segments: segmentPresets,
+    controlOptions: {
+      routeSorts: [
+        { value: "trip_count", label: "Trip count" },
+        { value: "total_revenue", label: "Total revenue" },
+      ],
+      tripSorts: [
+        { value: "pickup_datetime", label: "Pickup time" },
+        { value: "total_amount", label: "Total fare" },
+        { value: "trip_distance", label: "Distance" },
+        { value: "tip_amount", label: "Tip amount" },
+      ],
+      sortDirections: [
+        { value: "desc", label: "Descending" },
+        { value: "asc", label: "Ascending" },
+      ],
+      limits: ["25", "50", "100", "250", "500"].map((value) => ({ value, label: `Top ${value}` })),
+      topNs: ["10", "15", "20", "30", "50"].map((value) => ({ value, label: `Top ${value}` })),
+      forecastHorizons: ["12", "24", "48", "72", "168"].map((value) => ({ value, label: `${value} hours` })),
+      forecastWindows: ["6", "12", "24", "48", "72"].map((value) => ({ value, label: `${value} hour window` })),
+      mapKinds: [
+        { value: "pickup", label: "Pickup zones" },
+        { value: "dropoff", label: "Dropoff zones" },
+      ],
+      mapValues: [
+        { value: "trip_count", label: "Trips" },
+        { value: "total_revenue", label: "Revenue" },
+      ],
+      airportZones: [
+        { value: "All", label: "All airports" },
+        { value: "JFK Airport", label: "JFK Airport" },
+        { value: "LaGuardia Airport", label: "LaGuardia Airport" },
+        { value: "Newark Airport", label: "Newark Airport" },
+      ],
+      scenarioTypes: [
+        { value: "airport_demand", label: "Airport demand" },
+        { value: "tip_rate", label: "Tip rate" },
+        { value: "peak_demand", label: "Peak demand" },
+        { value: "route_fare", label: "Route fare" },
+      ],
+      scenarioPercents: ["-25", "-15", "-10", "5", "10", "15", "25"].map((value) => ({ value, label: `${value}%` })),
+      fareBuckets: [
+        { value: "default", label: "Any fare" },
+        { value: "0-15", label: "$0-$15" },
+        { value: "15-30", label: "$15-$30" },
+        { value: "30-60", label: "$30-$60" },
+        { value: "60-999", label: "$60+" },
+      ],
+    },
   };
 }
 
@@ -491,7 +542,11 @@ export async function routeFareDistribution(pickupZone: string, dropoffZone: str
   );
 }
 
-export async function airportAnalytics(filters: Filters) {
+function airportFilterSql(airportZone?: string | null) {
+  return airportZone && airportZone !== "All" ? " AND airport_zone = $airportZone" : "";
+}
+
+export async function airportAnalytics(filters: Filters, airportZone?: string | null) {
   const { fromSql, params } = filteredFrom(filters);
   return queryRows(
     `
@@ -519,14 +574,16 @@ export async function airportAnalytics(filters: Filters) {
       ${fromSql}
       AND (p.service_zone = 'Airport' OR d.service_zone = 'Airport')
     )
+    WHERE airport_zone IS NOT NULL
+    ${airportFilterSql(airportZone)}
     GROUP BY 1
     ORDER BY trip_count DESC
     `,
-    params,
+    airportZone && airportZone !== "All" ? { ...params, airportZone } : params,
   );
 }
 
-export async function airportRoutes(filters: Filters, limit = 25) {
+export async function airportRoutes(filters: Filters, limit = 25, airportZone?: string | null) {
   const { fromSql, params } = filteredFrom(filters);
   return queryRows(
     `
@@ -547,15 +604,16 @@ export async function airportRoutes(filters: Filters, limit = 25) {
            round(avg(t.trip_distance), 2) AS avg_distance
     ${fromSql}
     AND (p.service_zone = 'Airport' OR d.service_zone = 'Airport')
+    ${airportZone && airportZone !== "All" ? "AND (p.zone = $airportZone OR d.zone = $airportZone)" : ""}
     GROUP BY 1, 2, 3, 4
     ORDER BY trip_count DESC
     LIMIT $limit
     `,
-    { ...params, limit },
+    airportZone && airportZone !== "All" ? { ...params, limit, airportZone } : { ...params, limit },
   );
 }
 
-export async function airportHourlyDemand(filters: Filters) {
+export async function airportHourlyDemand(filters: Filters, airportZone?: string | null) {
   const { fromSql, params } = filteredFrom(filters);
   return queryRows(
     `
@@ -567,10 +625,11 @@ export async function airportHourlyDemand(filters: Filters) {
            count(*) AS trip_count
     ${fromSql}
     AND (p.service_zone = 'Airport' OR d.service_zone = 'Airport')
+    ${airportZone && airportZone !== "All" ? "AND (p.zone = $airportZone OR d.zone = $airportZone)" : ""}
     GROUP BY 1, 2
     ORDER BY 1, 2
     `,
-    params,
+    airportZone && airportZone !== "All" ? { ...params, airportZone } : params,
   );
 }
 
@@ -678,6 +737,34 @@ export async function zoneGeojson(filters: Filters, kind = "pickup", valueColumn
   return geojson;
 }
 
+export async function zoneNetwork(zoneId: number, filters: Filters, limit = 12) {
+  const [detail, flows, origins, destinations] = await Promise.all([
+    zoneDetail(zoneId, filters),
+    zoneInboundOutbound(zoneId, filters),
+    zoneTopOrigins(zoneId, filters, limit),
+    zoneTopDestinations(zoneId, filters, limit),
+  ]);
+  const links = [
+    ...origins.map((row) => ({
+      source: String(row.zone),
+      target: String(detail.zone),
+      direction: "inbound",
+      trip_count: row.trip_count,
+      total_revenue: row.total_revenue,
+      avg_total_amount: row.avg_total_amount,
+    })),
+    ...destinations.map((row) => ({
+      source: String(detail.zone),
+      target: String(row.zone),
+      direction: "outbound",
+      trip_count: row.trip_count,
+      total_revenue: row.total_revenue,
+      avg_total_amount: row.avg_total_amount,
+    })),
+  ];
+  return { detail, flows, origins, destinations, links };
+}
+
 export const segmentPresets = [
   { id: "airport", label: "Airport trips" },
   { id: "non_airport", label: "Non-airport trips" },
@@ -760,14 +847,14 @@ export async function segmentRoutes(segment: string, filters: Filters, limit = 1
   );
 }
 
-export async function compareSegments(left: string, right: string, filters: Filters) {
+export async function compareSegments(left: string, right: string, filters: Filters, limit = 10) {
   const [leftMetrics, rightMetrics, leftDemand, rightDemand, leftRoutes, rightRoutes] = await Promise.all([
     segmentMetrics(left, filters),
     segmentMetrics(right, filters),
     segmentDemand(left, filters),
     segmentDemand(right, filters),
-    segmentRoutes(left, filters),
-    segmentRoutes(right, filters),
+    segmentRoutes(left, filters, limit),
+    segmentRoutes(right, filters, limit),
   ]);
   const lift = ["trip_count", "total_revenue", "avg_total_amount", "avg_distance", "avg_tip_rate_pct"].map((metric) => {
     const leftValue = Number(leftMetrics[metric] ?? 0);

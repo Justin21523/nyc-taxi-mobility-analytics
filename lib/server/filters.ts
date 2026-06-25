@@ -8,6 +8,7 @@ export const filterSchema = z.object({
   paymentType: z.string().optional().nullable(),
   airportOnly: z.coerce.boolean().optional().default(false),
   minDistance: z.coerce.number().optional().default(0),
+  datasetId: z.string().regex(/^[a-z0-9-]+$/).optional().nullable(),
 });
 
 export type Filters = z.infer<typeof filterSchema>;
@@ -21,6 +22,7 @@ export function parseFilters(searchParams: URLSearchParams): Filters {
     paymentType: searchParams.get("paymentType"),
     airportOnly: searchParams.get("airportOnly") ?? undefined,
     minDistance: searchParams.get("minDistance") ?? undefined,
+    datasetId: searchParams.get("datasetId"),
   });
 }
 
@@ -55,9 +57,10 @@ export function filteredFrom(filters: Filters): { fromSql: string; params: Recor
     params.minDistance = filters.minDistance;
   }
   const whereSql = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+  const tripsTable = filters.datasetId ? `uploaded_trips_${filters.datasetId.replaceAll("-", "_")}` : "trips";
   return {
     fromSql: `
-      FROM trips t
+      FROM ${tripsTable} t
       JOIN zones p ON t.pickup_location_id = p.location_id
       JOIN zones d ON t.dropoff_location_id = d.location_id
       ${whereSql}
@@ -65,4 +68,3 @@ export function filteredFrom(filters: Filters): { fromSql: string; params: Recor
     params,
   };
 }
-

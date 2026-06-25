@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis } from "recharts";
 
+import { chartGridColor, chartPalette } from "@/lib/client/theme";
 import { numberValue } from "@/lib/client/format";
+import { useLocale } from "@/lib/client/i18n";
 
 type Row = Record<string, unknown>;
 
@@ -12,12 +14,12 @@ export function TimeSeriesChart({ data, keys }: { data: Row[]; keys: string[] })
     <div className="h-80 w-full">
       <ResponsiveContainer>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
           <XAxis dataKey="pickup_hour" tick={{ fontSize: 11 }} minTickGap={36} />
           <YAxis tick={{ fontSize: 11 }} />
           <Tooltip />
           {keys.map((key, index) => (
-            <Line key={key} type="monotone" dataKey={key} stroke={["#0f766e", "#f97316", "#2563eb", "#7c3aed"][index % 4]} dot={false} strokeWidth={2} />
+            <Line key={key} type="monotone" dataKey={key} stroke={chartPalette[index % chartPalette.length]} dot={false} strokeWidth={2} />
           ))}
         </LineChart>
       </ResponsiveContainer>
@@ -30,11 +32,11 @@ export function BarList({ data, nameKey, valueKey }: { data: Row[]; nameKey: str
     <div className="h-80 w-full">
       <ResponsiveContainer>
         <BarChart data={data} layout="vertical" margin={{ left: 40 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
           <XAxis type="number" tick={{ fontSize: 11 }} />
           <YAxis type="category" dataKey={nameKey} tick={{ fontSize: 11 }} width={120} />
           <Tooltip />
-          <Bar dataKey={valueKey} fill="#0f766e" radius={[0, 4, 4, 0]} />
+          <Bar dataKey={valueKey} fill={chartPalette[0]} radius={[0, 4, 4, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -42,16 +44,17 @@ export function BarList({ data, nameKey, valueKey }: { data: Row[]; nameKey: str
 }
 
 export function FareScatter({ data }: { data: Row[] }) {
+  const { t } = useLocale();
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer>
         <ScatterChart>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis type="number" dataKey="trip_distance" name="Distance" tick={{ fontSize: 11 }} />
-          <YAxis type="number" dataKey="total_amount" name="Fare" tick={{ fontSize: 11 }} />
+          <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
+          <XAxis type="number" dataKey="trip_distance" name={t("Distance")} tick={{ fontSize: 11 }} />
+          <YAxis type="number" dataKey="total_amount" name={t("Fare")} tick={{ fontSize: 11 }} />
           <ZAxis type="number" dataKey="tip_amount" range={[40, 180]} />
           <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-          <Scatter data={data} fill="#2563eb" />
+          <Scatter data={data} fill={chartPalette[1]} />
         </ScatterChart>
       </ResponsiveContainer>
     </div>
@@ -59,6 +62,7 @@ export function FareScatter({ data }: { data: Row[] }) {
 }
 
 export function HeatmapTable({ rows, xKey, yKey, valueKey }: { rows: Row[]; xKey: string; yKey: string; valueKey: string }) {
+  const { t } = useLocale();
   const xValues = Array.from(new Set(rows.map((row) => String(row[xKey])))).sort((a, b) => Number(a) - Number(b));
   const yValues = Array.from(new Set(rows.map((row) => String(row[yKey]))));
   const lookup = new Map(rows.map((row) => [`${row[yKey]}::${row[xKey]}`, numberValue(row[valueKey])]));
@@ -68,16 +72,16 @@ export function HeatmapTable({ rows, xKey, yKey, valueKey }: { rows: Row[]; xKey
       <table className="min-w-full border-collapse text-xs">
         <thead>
           <tr>
-            <th className="sticky left-0 bg-white p-2 text-left font-semibold text-slate-600">{yKey}</th>
+            <th className="sticky left-0 bg-app-surface-muted p-2 text-left font-semibold text-app-text-secondary">{t(yKey.replaceAll("_", " "))}</th>
             {xValues.map((x) => (
-              <th key={x} className="p-2 text-right font-semibold text-slate-600">{x}</th>
+              <th key={x} className="p-2 text-right font-semibold text-app-text-secondary">{x}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {yValues.map((y) => (
             <tr key={y}>
-              <td className="sticky left-0 bg-white p-2 font-medium text-slate-700">{y}</td>
+              <td className="sticky left-0 bg-app-surface-muted p-2 font-medium text-app-text-secondary">{y}</td>
               {xValues.map((x) => {
                 const value = lookup.get(`${y}::${x}`) ?? 0;
                 const intensity = value / max;
@@ -96,25 +100,30 @@ export function HeatmapTable({ rows, xKey, yKey, valueKey }: { rows: Row[]; xKey
 }
 
 export function SimpleTable({ rows, columns }: { rows: Row[]; columns?: string[] }) {
+  const { t } = useLocale();
   const resolvedColumns = columns ?? Object.keys(rows[0] ?? {});
   return (
-    <div className="overflow-auto">
-      <table className="min-w-full text-left text-sm">
+    <div className="overflow-auto rounded-md border border-app-border">
+      <table className="ui-table min-w-full text-left text-sm">
         <thead>
-          <tr className="border-b border-slate-200">
+          <tr className="border-b border-app-border">
             {resolvedColumns.map((column) => (
-              <th key={column} className="whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase text-slate-500">{column.replaceAll("_", " ")}</th>
+              <th key={column} className="whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase tracking-wide">{t(column.replaceAll("_", " "))}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, index) => (
-            <tr key={index} className="border-b border-slate-100">
+          {rows.length ? rows.map((row, index) => (
+            <tr key={index} className="border-b border-app-border/60">
               {resolvedColumns.map((column) => (
-                <td key={column} className="whitespace-nowrap px-3 py-2 text-slate-700">{String(row[column] ?? "")}</td>
+                <td key={column} className="whitespace-nowrap px-3 py-2 text-app-text-secondary">{String(row[column] ?? "")}</td>
               ))}
             </tr>
-          ))}
+          )) : (
+            <tr>
+              <td className="px-3 py-8 text-center text-sm text-app-text-muted" colSpan={Math.max(1, resolvedColumns.length)}>{t("No rows match the current filters.")}</td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
@@ -122,29 +131,34 @@ export function SimpleTable({ rows, columns }: { rows: Row[]; columns?: string[]
 }
 
 export function LinkedTable({ rows, columns, label = "Open" }: { rows: Row[]; columns?: string[]; label?: string }) {
+  const { t } = useLocale();
   const resolvedColumns = columns ?? Object.keys(rows[0] ?? {}).filter((column) => !column.startsWith("__"));
   return (
-    <div className="overflow-auto">
-      <table className="min-w-full text-left text-sm">
+    <div className="overflow-auto rounded-md border border-app-border">
+      <table className="ui-table min-w-full text-left text-sm">
         <thead>
-          <tr className="border-b border-slate-200">
+          <tr className="border-b border-app-border">
             {resolvedColumns.map((column) => (
-              <th key={column} className="whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase text-slate-500">{column.replaceAll("_", " ")}</th>
+              <th key={column} className="whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase tracking-wide">{t(column.replaceAll("_", " "))}</th>
             ))}
-            <th className="px-3 py-2 text-xs font-semibold uppercase text-slate-500">Detail</th>
+            <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide">{t("Detail")}</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, index) => (
-            <tr key={index} className="border-b border-slate-100">
+          {rows.length ? rows.map((row, index) => (
+            <tr key={index} className="border-b border-app-border/60">
               {resolvedColumns.map((column) => (
-                <td key={column} className="whitespace-nowrap px-3 py-2 text-slate-700">{String(row[column] ?? "")}</td>
+                <td key={column} className="whitespace-nowrap px-3 py-2 text-app-text-secondary">{String(row[column] ?? "")}</td>
               ))}
               <td className="whitespace-nowrap px-3 py-2">
-                <Link className="font-medium text-teal-700 hover:text-teal-900" href={String(row.__href ?? "#")}>{label}</Link>
+                <Link className="font-medium text-brand-primary hover:text-brand-primary-active" href={String(row.__href ?? "#")}>{t(label)}</Link>
               </td>
             </tr>
-          ))}
+          )) : (
+            <tr>
+              <td className="px-3 py-8 text-center text-sm text-app-text-muted" colSpan={Math.max(1, resolvedColumns.length + 1)}>{t("No rows match the current filters.")}</td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
@@ -156,13 +170,13 @@ export function MetricBars({ data, nameKey, valueKey }: { data: Row[]; nameKey: 
     <div className="h-72 w-full">
       <ResponsiveContainer>
         <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
           <XAxis dataKey={nameKey} tick={{ fontSize: 11 }} />
           <YAxis tick={{ fontSize: 11 }} />
           <Tooltip />
           <Bar dataKey={valueKey}>
             {data.map((_, index) => (
-              <Cell key={index} fill={["#0f766e", "#2563eb", "#f97316", "#7c3aed", "#64748b"][index % 5]} />
+              <Cell key={index} fill={chartPalette[index % chartPalette.length]} />
             ))}
           </Bar>
         </BarChart>
