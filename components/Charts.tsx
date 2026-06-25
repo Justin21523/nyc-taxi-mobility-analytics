@@ -121,8 +121,8 @@ export function SimpleTable({ rows, columns }: { rows: Row[]; columns?: string[]
   );
 }
 
-export function LinkedTable({ rows, columns, hrefForRow, label = "Open" }: { rows: Row[]; columns?: string[]; hrefForRow: (row: Row) => string; label?: string }) {
-  const resolvedColumns = columns ?? Object.keys(rows[0] ?? {});
+export function LinkedTable({ rows, columns, label = "Open" }: { rows: Row[]; columns?: string[]; label?: string }) {
+  const resolvedColumns = columns ?? Object.keys(rows[0] ?? {}).filter((column) => !column.startsWith("__"));
   return (
     <div className="overflow-auto">
       <table className="min-w-full text-left text-sm">
@@ -141,7 +141,7 @@ export function LinkedTable({ rows, columns, hrefForRow, label = "Open" }: { row
                 <td key={column} className="whitespace-nowrap px-3 py-2 text-slate-700">{String(row[column] ?? "")}</td>
               ))}
               <td className="whitespace-nowrap px-3 py-2">
-                <Link className="font-medium text-teal-700 hover:text-teal-900" href={hrefForRow(row)}>{label}</Link>
+                <Link className="font-medium text-teal-700 hover:text-teal-900" href={String(row.__href ?? "#")}>{label}</Link>
               </td>
             </tr>
           ))}

@@ -677,3 +677,208 @@ export async function zoneGeojson(filters: Filters, kind = "pickup", valueColumn
   });
   return geojson;
 }
+
+export const segmentPresets = [
+  { id: "airport", label: "Airport trips" },
+  { id: "non_airport", label: "Non-airport trips" },
+  { id: "weekday", label: "Weekday" },
+  { id: "weekend", label: "Weekend" },
+  { id: "peak", label: "Peak hours" },
+  { id: "off_peak", label: "Off-peak hours" },
+  { id: "card", label: "Card payments" },
+  { id: "cash", label: "Cash payments" },
+  { id: "manhattan", label: "Manhattan pickup" },
+  { id: "queens", label: "Queens pickup" },
+  { id: "short", label: "Short trips" },
+  { id: "long", label: "Long trips" },
+];
+
+function segmentClause(segment: string): string {
+  const clauses: Record<string, string> = {
+    airport: "(p.service_zone = 'Airport' OR d.service_zone = 'Airport')",
+    non_airport: "(p.service_zone != 'Airport' AND d.service_zone != 'Airport')",
+    weekday: "extract('dow' FROM t.pickup_datetime) BETWEEN 1 AND 5",
+    weekend: "extract('dow' FROM t.pickup_datetime) IN (0, 6)",
+    peak: "extract('hour' FROM t.pickup_datetime) BETWEEN 7 AND 10 OR extract('hour' FROM t.pickup_datetime) BETWEEN 16 AND 19",
+    off_peak: "NOT (extract('hour' FROM t.pickup_datetime) BETWEEN 7 AND 10 OR extract('hour' FROM t.pickup_datetime) BETWEEN 16 AND 19)",
+    card: "CAST(t.payment_type AS VARCHAR) IN ('card', '1')",
+    cash: "CAST(t.payment_type AS VARCHAR) IN ('cash', '2')",
+    manhattan: "p.borough = 'Manhattan'",
+    queens: "p.borough = 'Queens'",
+    short: "t.trip_distance < 2",
+    long: "t.trip_distance >= 6",
+  };
+  return clauses[segment] ?? "true";
+}
+
+export async function segmentMetrics(segment: string, filters: Filters) {
+  const { fromSql, params } = filteredFrom(filters);
+  return queryOne(
+    `
+    SELECT count(*) AS trip_count,
+           round(sum(t.total_amount), 2) AS total_revenue,
+           round(avg(t.total_amount), 2) AS avg_total_amount,
+           round(avg(t.trip_distance), 2) AS avg_distance,
+           round(avg(t.tip_amount), 2) AS avg_tip_amount,
+           round(avg(CASE WHEN t.total_amount > 0 THEN t.tip_amount / t.total_amount ELSE 0 END) * 100, 2) AS avg_tip_rate_pct
+    ${fromSql}
+    AND (${segmentClause(segment)})
+    `,
+    params,
+  );
+}
+
+export async function segmentDemand(segment: string, filters: Filters) {
+  const { fromSql, params } = filteredFrom(filters);
+  return queryRows(
+    `
+    SELECT extract('hour' FROM t.pickup_datetime) AS pickup_hour,
+           count(*) AS trip_count
+    ${fromSql}
+    AND (${segmentClause(segment)})
+    GROUP BY 1
+    ORDER BY 1
+    `,
+    params,
+  );
+}
+
+export async function segmentRoutes(segment: string, filters: Filters, limit = 10) {
+  const { fromSql, params } = filteredFrom(filters);
+  return queryRows(
+    `
+    SELECT p.zone AS pickup_zone, d.zone AS dropoff_zone,
+           count(*) AS trip_count,
+           round(sum(t.total_amount), 2) AS total_revenue
+    ${fromSql}
+    AND (${segmentClause(segment)})
+    GROUP BY 1, 2
+    ORDER BY trip_count DESC
+    LIMIT $limit
+    `,
+    { ...params, limit },
+  );
+}
+
+export async function compareSegments(left: string, right: string, filters: Filters) {
+  const [leftMetrics, rightMetrics, leftDemand, rightDemand, leftRoutes, rightRoutes] = await Promise.all([
+    segmentMetrics(left, filters),
+    segmentMetrics(right, filters),
+    segmentDemand(left, filters),
+    segmentDemand(right, filters),
+    segmentRoutes(left, filters),
+    segmentRoutes(right, filters),
+  ]);
+  const lift = ["trip_count", "total_revenue", "avg_total_amount", "avg_distance", "avg_tip_rate_pct"].map((metric) => {
+    const leftValue = Number(leftMetrics[metric] ?? 0);
+    const rightValue = Number(rightMetrics[metric] ?? 0);
+    return {
+      metric,
+      left: leftValue,
+      right: rightValue,
+      absolute_delta: Number((leftValue - rightValue).toFixed(2)),
+      lift_pct: rightValue ? Number((((leftValue - rightValue) / rightValue) * 100).toFixed(2)) : null,
+    };
+  });
+  return { presets: segmentPresets, left, right, leftMetrics, rightMetrics, lift, leftDemand, rightDemand, leftRoutes, rightRoutes };
+}
+
+export async function anomalyRows(filters: Filters, limit = 100) {
+  const rows = await demandAnomalies(filters) as Row[];
+  return rows
+    .filter((row) => row.is_anomaly)
+    .map((row) => {
+      const actual = Number(row.trip_count ?? 0);
+      const expected = Number(row.rolling_mean ?? 0);
+      const std = Math.max(1, Math.abs(Number(row.upper_band ?? expected) - expected) / 2);
+      return {
+        pickup_hour: row.pickup_hour,
+        actual_trip_count: actual,
+        expected_trip_count: Number(expected.toFixed(2)),
+        delta: Number((actual - expected).toFixed(2)),
+        severity_score: Number((Math.abs(actual - expected) / std).toFixed(2)),
+      };
+    })
+    .sort((a, b) => b.severity_score - a.severity_score)
+    .slice(0, limit);
+}
+
+export async function anomalyDetail(pickupHour: string, filters: Filters) {
+  const start = pickupHour;
+  const { fromSql, params } = filteredFrom(filters);
+  const hourParams = { ...params, pickupHour: start };
+  const summary = await queryOne(
+    `
+    SELECT count(*) AS trip_count,
+           round(sum(t.total_amount), 2) AS total_revenue,
+           round(avg(t.total_amount), 2) AS avg_total_amount
+    ${fromSql}
+    AND date_trunc('hour', t.pickup_datetime) = CAST($pickupHour AS TIMESTAMP)
+    `,
+    hourParams,
+  );
+  const previous24h = await queryOne(
+    `
+    SELECT count(*) AS trip_count,
+           round(sum(t.total_amount), 2) AS total_revenue
+    ${fromSql}
+    AND t.pickup_datetime >= CAST($pickupHour AS TIMESTAMP) - INTERVAL 24 HOURS
+    AND t.pickup_datetime < CAST($pickupHour AS TIMESTAMP)
+    `,
+    hourParams,
+  );
+  const sameHourYesterday = await queryOne(
+    `
+    SELECT count(*) AS trip_count,
+           round(sum(t.total_amount), 2) AS total_revenue
+    ${fromSql}
+    AND date_trunc('hour', t.pickup_datetime) = CAST($pickupHour AS TIMESTAMP) - INTERVAL 24 HOURS
+    `,
+    hourParams,
+  );
+  const affectedZones = await queryRows(
+    `
+    SELECT p.zone AS pickup_zone,
+           count(*) AS trip_count,
+           round(sum(t.total_amount), 2) AS total_revenue
+    ${fromSql}
+    AND date_trunc('hour', t.pickup_datetime) = CAST($pickupHour AS TIMESTAMP)
+    GROUP BY 1
+    ORDER BY trip_count DESC
+    LIMIT 15
+    `,
+    hourParams,
+  );
+  const affectedRoutes = await queryRows(
+    `
+    SELECT p.zone AS pickup_zone, d.zone AS dropoff_zone,
+           count(*) AS trip_count,
+           round(sum(t.total_amount), 2) AS total_revenue
+    ${fromSql}
+    AND date_trunc('hour', t.pickup_datetime) = CAST($pickupHour AS TIMESTAMP)
+    GROUP BY 1, 2
+    ORDER BY trip_count DESC
+    LIMIT 15
+    `,
+    hourParams,
+  );
+  return { pickupHour, summary, previous24h, sameHourYesterday, affectedZones, affectedRoutes };
+}
+
+export async function scenarioImpact(type: string, percent: number, filters: Filters) {
+  const base = await overview(filters);
+  const multiplier = percent / 100;
+  const trips = Number(base.trip_count ?? 0);
+  const revenue = Number(base.total_revenue ?? 0);
+  const avgTipRate = Number(base.avg_tip_rate_pct ?? 0) / 100;
+  if (type === "tip_rate") {
+    return { type, percent, base, impacted_metric: "tip revenue", estimated_delta: Number((revenue * (percent / 100)).toFixed(2)) };
+  }
+  if (type === "peak_demand") {
+    return { type, percent, base, impacted_metric: "peak trips/revenue", estimated_trip_delta: Math.round(trips * multiplier), estimated_revenue_delta: Number((revenue * multiplier).toFixed(2)) };
+  }
+  if (type === "route_fare") {
+    return { type, percent, base, impacted_metric: "fare revenue", estimated_revenue_delta: Number((revenue * multiplier).toFixed(2)) };
+  }
+  return { type: "airport_demand", percent, base, impacted_metric: "airport trips/revenue", estimated_trip_delta: Math.round(trips * multiplier), estimated_revenue_delta: Number((revenue * multiplier).toFixed(2)), implied_tip_delta: Number((revenue * multiplier * avgTipRate).toFixed(2)) };
+}

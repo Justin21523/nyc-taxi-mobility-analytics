@@ -19,11 +19,11 @@ export default async function ZonesRoutesPage({ searchParams }: { searchParams: 
       <div className="grid gap-5 xl:grid-cols-2">
         <Section title="Pickup zones">
           <BarList data={pickupZones} nameKey="zone" valueKey="trip_count" />
-          <LinkedTable rows={pickupZones.slice(0, 10)} columns={["location_id", "borough", "zone", "trip_count", "total_revenue"]} hrefForRow={(row) => `/zones/${row.location_id}`} />
+          <LinkedTable rows={pickupZones.slice(0, 10).map((row) => ({ ...row, __href: `/zones/${row.location_id}` }))} columns={["location_id", "borough", "zone", "trip_count", "total_revenue"]} />
         </Section>
         <Section title="Dropoff zones">
           <BarList data={dropoffZones} nameKey="zone" valueKey="trip_count" />
-          <LinkedTable rows={dropoffZones.slice(0, 10)} columns={["location_id", "borough", "zone", "trip_count", "total_revenue"]} hrefForRow={(row) => `/zones/${row.location_id}`} />
+          <LinkedTable rows={dropoffZones.slice(0, 10).map((row) => ({ ...row, __href: `/zones/${row.location_id}` }))} columns={["location_id", "borough", "zone", "trip_count", "total_revenue"]} />
         </Section>
         <Section title="Borough-to-borough OD matrix">
           <HeatmapTable rows={od} xKey="dropoff_borough" yKey="pickup_borough" valueKey="trip_count" />
@@ -34,8 +34,7 @@ export default async function ZonesRoutesPage({ searchParams }: { searchParams: 
         <section className="xl:col-span-2">
           <Section title="Top routes by revenue">
             <LinkedTable
-              rows={revenueRoutes}
-              hrefForRow={(row) => `/routes/drilldown?pickupZone=${encodeURIComponent(String(row.pickup_zone))}&dropoffZone=${encodeURIComponent(String(row.dropoff_zone))}`}
+              rows={revenueRoutes.map((row) => ({ ...row, __href: `/routes/drilldown?pickupZone=${encodeURIComponent(String(row.pickup_zone))}&dropoffZone=${encodeURIComponent(String(row.dropoff_zone))}` }))}
             />
           </Section>
         </section>

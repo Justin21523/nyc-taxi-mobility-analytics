@@ -54,6 +54,14 @@ smoke-web:
 	curl -fsS http://127.0.0.1:3100/routes/drilldown >/dev/null
 	curl -fsS http://127.0.0.1:3100/analytics/airports >/dev/null
 	curl -fsS http://127.0.0.1:3100/analytics/routes/drilldown >/dev/null
+	curl -fsS http://127.0.0.1:3100/segments >/dev/null
+	curl -fsS http://127.0.0.1:3100/anomalies >/dev/null
+	curl -fsS http://127.0.0.1:3100/data-quality >/dev/null
+	curl -fsS http://127.0.0.1:3100/warehouse >/dev/null
+	curl -fsS http://127.0.0.1:3100/scenario >/dev/null
+	curl -fsS http://127.0.0.1:3100/saved-views >/dev/null
+	curl -fsS http://127.0.0.1:3100/exports/summary.json >/dev/null
+	curl -fsS http://127.0.0.1:3100/exports/routes.csv >/dev/null
 	kill $$(cat data/reports/next.pid)
 
 test:

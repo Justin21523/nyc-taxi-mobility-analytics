@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, BarChart3, CarTaxiFront, Gauge, Map, Plane, Route, Search, WalletCards } from "lucide-react";
+import { Activity, BarChart3, Bookmark, CarTaxiFront, Database, FlaskConical, Gauge, Map, Plane, Route, Search, ShieldCheck, Siren, Split, WalletCards } from "lucide-react";
 import type { ReactNode } from "react";
 
 const navItems = [
@@ -7,6 +7,12 @@ const navItems = [
   { href: "/demand", label: "Demand", icon: Activity },
   { href: "/zones-routes", label: "Zones & Routes", icon: Route },
   { href: "/airports", label: "Airports", icon: Plane },
+  { href: "/segments", label: "Segments", icon: Split },
+  { href: "/anomalies", label: "Anomalies", icon: Siren },
+  { href: "/data-quality", label: "Data Quality", icon: ShieldCheck },
+  { href: "/warehouse", label: "Warehouse", icon: Database },
+  { href: "/scenario", label: "Scenario", icon: FlaskConical },
+  { href: "/saved-views", label: "Saved Views", icon: Bookmark },
   { href: "/fares-tips", label: "Fares & Tips", icon: WalletCards },
   { href: "/trips", label: "Trip Explorer", icon: Search },
   { href: "/forecast", label: "Forecast Lab", icon: BarChart3 },

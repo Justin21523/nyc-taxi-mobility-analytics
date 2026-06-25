@@ -169,6 +169,12 @@ Reports are written to `data/reports/evaluation_report.json`.
 - Zone Drilldown: inbound/outbound trips, connected zones, hourly demand, and sample trips
 - Route Drilldown: route KPIs, route-vs-system comparison, fare distribution, and route samples
 - Airport Analytics: JFK/LGA/EWR demand, inbound/outbound split, airport fare premium, and top airport routes
+- Segment Comparison: compare airport/non-airport, weekday/weekend, peak/off-peak, payment, borough, and trip length segments
+- Anomaly Investigation: inspect abnormal demand hours, affected zones, affected routes, and revenue impact
+- Data Quality Explorer: DQ checks, freshness, schema compatibility, and query benchmark reports
+- Warehouse Explorer: partition files, row counts, DuckDB catalog, and benchmark metadata
+- Scenario Simulator: estimate demand, revenue, fare, and tip impact for simple business scenarios
+- Saved Views: store and reopen URL-based analysis states
 - Fares & tips: fare distribution, revenue by borough, tip behavior, route revenue
 - Trip Explorer: filterable and sortable trip-level table
 - Forecast Lab: naive, moving average, and seasonal naive model comparison
