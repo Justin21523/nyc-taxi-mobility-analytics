@@ -233,6 +233,24 @@ docker compose up --build
 ```
 
 - Next.js app and API: `http://localhost:3000`
+- Health check: `http://localhost:3000/api/health`
+
+For Render, Railway, or another Docker web service, deploy this repository with the
+included `Dockerfile` and do not override the start command. The image generates
+the deterministic sample data and DuckDB-backed warehouse during build, then
+starts Next.js on `0.0.0.0:${PORT}` with a fallback to port `3000`.
+
+Recommended deployment settings:
+
+- Runtime: Dockerfile
+- Health check path: `/api/health`
+- `NEXT_PUBLIC_BASE_PATH`: leave unset unless the app is mounted below a subpath
+
+Smoke test the same image locally:
+
+```bash
+make smoke-docker
+```
 
 ## Resume Bullets
 

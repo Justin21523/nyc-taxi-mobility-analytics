@@ -8,7 +8,10 @@ tsconfig.tsbuildinfo
 *.log
 test-results/
 playwright-report/
-data/raw/
+data/raw/*
+!data/raw/reference/
+!data/raw/reference/taxi_zone_lookup.csv
+!data/raw/reference/nyc_taxi_zones.geojson
 data/sample/*.parquet
 data/warehouse/*
 !data/warehouse/.gitkeep

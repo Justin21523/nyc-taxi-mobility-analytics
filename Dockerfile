@@ -24,4 +24,6 @@ RUN make sample-data && make etl && npm run build
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start", "--", "--hostname", "0.0.0.0", "--port", "3000"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || '3000') + '/api/health').then(async (response) => { if (!response.ok) throw new Error('HTTP ' + response.status); const body = await response.json(); if (body.status !== 'ok' || body.warehouseReady !== true) throw new Error('warehouse not ready'); }).catch((error) => { console.error(error); process.exit(1); })"
+
+CMD ["sh", "-c", "npm run start -- --hostname 0.0.0.0 --port ${PORT:-3000}"]
