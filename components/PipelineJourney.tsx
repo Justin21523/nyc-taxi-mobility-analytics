@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { BarChart3, CheckCircle2, Database, FileUp, GitBranch, LineChart, ShieldCheck, Sparkles, Table2, WandSparkles } from "lucide-react";
+import { withBasePath } from "@/lib/client/basePath";
 import { useLocale } from "@/lib/client/i18n";
 
 type JourneyStep = {
@@ -271,7 +272,7 @@ function DataUploadDemo({ file, report, onFile, onReport }: { file: File | null;
     setUploading(true);
     const form = new FormData();
     form.set("file", nextFile);
-    const response = await fetch("/api/uploads", { method: "POST", body: form });
+    const response = await fetch(withBasePath("/api/uploads"), { method: "POST", body: form });
     const payload = await response.json();
     setUploading(false);
     if (!response.ok) {

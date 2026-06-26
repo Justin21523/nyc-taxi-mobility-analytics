@@ -5,6 +5,7 @@ import { Activity, BarChart3, Bookmark, CarTaxiFront, Database, FlaskConical, Ga
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { stripBasePath } from "@/lib/client/basePath";
 import { moduleForPath, moduleTones, type ModuleKey } from "@/lib/client/theme";
 import { LocaleToggle, useLocale } from "@/lib/client/i18n";
 
@@ -34,8 +35,9 @@ const groups = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const appPathname = stripBasePath(pathname);
   const { t } = useLocale();
-  const activeModule = moduleTones[moduleForPath(pathname)];
+  const activeModule = moduleTones[moduleForPath(appPathname)];
   return (
     <div className="min-h-screen text-app-text-primary">
       <aside className="fixed inset-y-0 left-0 hidden w-64 overflow-y-auto border-r border-app-border bg-app-surface-elevated/95 shadow-[8px_0_30px_rgb(15_23_42/4%)] lg:block">
@@ -57,7 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="mb-2 px-3 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-app-text-muted">{t(group.label)}</div>
               <div className="space-y-1">
                 {group.items.map((item) => {
-                  const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+                  const active = item.href === "/" ? appPathname === "/" : appPathname.startsWith(item.href);
                   const tone = moduleTones[item.module];
                   return (
                     <Link

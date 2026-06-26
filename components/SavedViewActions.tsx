@@ -4,6 +4,7 @@ import { Copy, ExternalLink, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { withBasePath } from "@/lib/client/basePath";
 import { useLocale } from "@/lib/client/i18n";
 
 export function SavedViewActions({ id, path }: { id: string; path: string }) {
@@ -12,12 +13,12 @@ export function SavedViewActions({ id, path }: { id: string; path: string }) {
   const { t } = useLocale();
 
   async function copy() {
-    await navigator.clipboard.writeText(`${window.location.origin}${path}`);
+    await navigator.clipboard.writeText(`${window.location.origin}${withBasePath(path)}`);
     setStatus("Copied");
   }
 
   async function remove() {
-    const response = await fetch(`/saved-views/api?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    const response = await fetch(withBasePath(`/saved-views/api?id=${encodeURIComponent(id)}`), { method: "DELETE" });
     setStatus(response.ok ? "Deleted" : "Delete failed");
     if (response.ok) router.refresh();
   }

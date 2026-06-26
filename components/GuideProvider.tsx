@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
+import { stripBasePath } from "@/lib/client/basePath";
 import { guideSteps, type GuideStep } from "@/lib/client/guideSteps";
 
 type HighlightBox = {
@@ -29,6 +30,7 @@ const GuideContext = createContext<GuideContextValue | null>(null);
 export function GuideProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const appPathname = stripBasePath(pathname);
   const autoStarted = useRef(false);
   const [active, setActive] = useState(false);
   const [index, setIndex] = useState(0);
@@ -44,7 +46,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
     const currentDataset = new URLSearchParams(window.location.search).get("datasetId");
     if (currentDataset && !route.searchParams.get("datasetId")) route.searchParams.set("datasetId", currentDataset);
     const nextRoute = `${route.pathname}${route.search}`;
-    if (pathname !== targetRoutePath) {
+    if (appPathname !== targetRoutePath) {
       router.push(nextRoute);
     }
     window.setTimeout(() => {
@@ -63,8 +65,8 @@ export function GuideProvider({ children }: { children: ReactNode }) {
           height: rect.height,
         });
       }, 420);
-    }, pathname === targetRoutePath ? 80 : 650);
-  }, [pathname, router]);
+    }, appPathname === targetRoutePath ? 80 : 650);
+  }, [appPathname, router]);
 
   const start = useCallback(() => {
     setActive(true);

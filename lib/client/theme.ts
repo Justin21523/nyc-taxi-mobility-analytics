@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { Activity, BarChart3, FileText, Gauge, Newspaper, Settings, ShieldCheck, Workflow } from "lucide-react";
+import { stripBasePath } from "@/lib/client/basePath";
 
 export type ModuleKey = "dashboard" | "dataQuality" | "analysis" | "textMining" | "mlModels" | "articles" | "jobs" | "settings";
 export type ToneKey = "info" | "success" | "warning" | "error";
@@ -52,10 +53,11 @@ export const kpiTones = [
 ];
 
 export function moduleForPath(pathname: string): ModuleKey {
-  if (pathname === "/" || pathname.startsWith("/saved-views")) return "dashboard";
-  if (pathname.startsWith("/data-quality") || pathname.startsWith("/warehouse")) return "dataQuality";
-  if (pathname.startsWith("/forecast")) return "mlModels";
-  if (pathname.startsWith("/settings")) return "settings";
+  const appPathname = stripBasePath(pathname);
+  if (appPathname === "/" || appPathname.startsWith("/saved-views")) return "dashboard";
+  if (appPathname.startsWith("/data-quality") || appPathname.startsWith("/warehouse")) return "dataQuality";
+  if (appPathname.startsWith("/forecast")) return "mlModels";
+  if (appPathname.startsWith("/settings")) return "settings";
   return "analysis";
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { stripBasePath, withBasePath } from "@/lib/client/basePath";
 import { useLocale } from "@/lib/client/i18n";
 
 export function SavedViewForm({ currentPath }: { currentPath: string }) {
@@ -9,8 +10,8 @@ export function SavedViewForm({ currentPath }: { currentPath: string }) {
   const { t } = useLocale();
 
   async function save() {
-    const path = typeof window === "undefined" ? currentPath : `${window.location.pathname}${window.location.search}`;
-    const response = await fetch("/saved-views/api", {
+    const path = typeof window === "undefined" ? currentPath : `${stripBasePath(window.location.pathname)}${window.location.search}`;
+    const response = await fetch(withBasePath("/saved-views/api"), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ name, path }),
