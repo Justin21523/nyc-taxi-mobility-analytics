@@ -9,7 +9,10 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "demo:capture": "playwright test tests/e2e/demo-capture.spec.ts --reporter=line"
+    "demo:capture": "playwright test tests/e2e/demo-capture.spec.ts --reporter=line",
+    "demo:dev": "npm --prefix demo-app run dev",
+    "demo:build": "npm --prefix demo-app run build",
+    "demo:preview": "npm --prefix demo-app run preview"
   },
   "keywords": [
     "nextjs",
