@@ -4,6 +4,8 @@ import { parseFilters } from "@/lib/server/filters";
 import { route } from "@/lib/server/http";
 import { tripSearch } from "@/lib/server/queries";
 
+export const dynamic = "force-static";
+
 export function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   return route(async () => tripSearch(parseFilters(searchParams), {

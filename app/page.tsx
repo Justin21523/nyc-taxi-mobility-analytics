@@ -8,6 +8,8 @@ import { filtersFromSearchParams, type SearchParams } from "@/lib/server/pageFil
 import { airportTrips, dailyRevenue, fareSummary, peakHours, tipBehavior, topZones } from "@/lib/server/queries";
 import { overviewInsights } from "@/lib/server/insights";
 
+export const dynamic = "force-static";
+
 export default async function OverviewPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const filters = await filtersFromSearchParams(Promise.resolve(params));

@@ -7,6 +7,8 @@ import { filtersFromSearchParams, type SearchParams } from "@/lib/server/pageFil
 import { demandAnomalies, hourlyDemand, peakHours, seasonality } from "@/lib/server/queries";
 import { demandInsights } from "@/lib/server/insights";
 
+export const dynamic = "force-static";
+
 export default async function DemandPage({ searchParams }: { searchParams: SearchParams }) {
   const filters = await filtersFromSearchParams(searchParams);
   const [demand, heatmap, peak, anomalies] = await Promise.all([

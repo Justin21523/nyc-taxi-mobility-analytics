@@ -8,6 +8,8 @@ import { segmentInsights } from "@/lib/server/insights";
 import { filtersFromSearchParams, type SearchParams } from "@/lib/server/pageFilters";
 import { compareSegments, segmentPresets } from "@/lib/server/queries";
 
+export const dynamic = "force-static";
+
 export default async function SegmentsPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const filters = await filtersFromSearchParams(Promise.resolve(params));

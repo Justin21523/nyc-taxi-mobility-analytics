@@ -10,6 +10,8 @@ import { mapInsights } from "@/lib/server/insights";
 import { filtersFromSearchParams, type SearchParams } from "@/lib/server/pageFilters";
 import { topZones, zoneGeojson, zoneNetwork } from "@/lib/server/queries";
 
+export const dynamic = "force-static";
+
 export default async function MapPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const filters = await filtersFromSearchParams(Promise.resolve(params));

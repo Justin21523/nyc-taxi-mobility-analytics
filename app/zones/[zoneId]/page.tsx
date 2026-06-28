@@ -7,6 +7,12 @@ import { Section } from "@/components/Section";
 import { filtersFromSearchParams, type SearchParams } from "@/lib/server/pageFilters";
 import { tripSearch, zoneDetail, zoneHourlyDemand, zoneInboundOutbound, zoneTopDestinations, zoneTopOrigins } from "@/lib/server/queries";
 
+export const dynamic = "force-static";
+
+export function generateStaticParams() {
+  return [{ zoneId: "1" }];
+}
+
 export default async function ZoneDrilldownPage({ params, searchParams }: { params: Promise<{ zoneId: string }>; searchParams: SearchParams }) {
   const [routeParams, queryParams] = await Promise.all([params, searchParams]);
   const filters = await filtersFromSearchParams(Promise.resolve(queryParams));

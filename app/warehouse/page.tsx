@@ -8,6 +8,8 @@ import { warehouseInsights } from "@/lib/server/insights";
 import { filtersFromSearchParams, type SearchParams } from "@/lib/server/pageFilters";
 import { warehouseCatalog } from "@/lib/server/reports";
 
+export const dynamic = "force-static";
+
 export default async function WarehousePage({ searchParams }: { searchParams: SearchParams }) {
   const filters = await filtersFromSearchParams(searchParams);
   const catalog = await warehouseCatalog();

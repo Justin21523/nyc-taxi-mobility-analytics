@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { processUpload } from "@/lib/server/uploads";
 
+export const dynamic = "force-static";
+
 export async function POST(request: Request) {
   try {
     const form = await request.formData();

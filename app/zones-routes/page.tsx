@@ -8,6 +8,8 @@ import { filtersFromSearchParams, type SearchParams } from "@/lib/server/pageFil
 import { odMatrix, routes, topZones } from "@/lib/server/queries";
 import { zonesRoutesInsights } from "@/lib/server/insights";
 
+export const dynamic = "force-static";
+
 export default async function ZonesRoutesPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const filters = await filtersFromSearchParams(Promise.resolve(params));

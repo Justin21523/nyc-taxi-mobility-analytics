@@ -8,6 +8,8 @@ import { Section } from "@/components/Section";
 import { savedViewsInsights } from "@/lib/server/insights";
 import { listSavedViews } from "@/lib/server/savedViews";
 
+export const dynamic = "force-static";
+
 export default async function SavedViewsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
   const currentPath = typeof params.path === "string" ? params.path : "/";

@@ -4,6 +4,8 @@ import { parseFilters } from "@/lib/server/filters";
 import { route } from "@/lib/server/http";
 import { routeDetail, routeFareDistribution, routeHourlyDemand, routes, tripSearch } from "@/lib/server/queries";
 
+export const dynamic = "force-static";
+
 export function GET(request: NextRequest) {
   return route(async () => {
     const filters = parseFilters(request.nextUrl.searchParams);

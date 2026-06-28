@@ -8,6 +8,8 @@ import { forecastInsights } from "@/lib/server/insights";
 import { filtersFromSearchParams, type SearchParams } from "@/lib/server/pageFilters";
 import { forecast, forecastMetrics } from "@/lib/server/queries";
 
+export const dynamic = "force-static";
+
 export default async function ForecastPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const filters = await filtersFromSearchParams(Promise.resolve(params));
